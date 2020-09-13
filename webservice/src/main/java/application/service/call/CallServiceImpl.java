@@ -2,9 +2,6 @@ package application.service.call;
 
 import application.exception.BusinessException;
 import application.model.calldto.CallDto;
-import application.model.callstatisticsjson.CallsStatisticsJson;
-import application.model.callstatisticsjson.TotalNumberOfCallsByCalleeNumber;
-import application.model.callstatisticsjson.TotalNumberOfCallsByCallerNumber;
 import application.repository.CallRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,13 +16,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-import static application.service.call.CallConstants.*;
+import static application.service.ServiceParameters.*;
+
 
 @Service
 public class CallServiceImpl implements CallService {
@@ -37,7 +31,7 @@ public class CallServiceImpl implements CallService {
     }
 
     @Override
-    public List<CallDto> createCall(List<CallDto> callDtoList) {
+    public List<CallDto> createCalls(List<CallDto> callDtoList) {
         for (CallDto callDto : callDtoList) {
             verifyValidityOfCall(callDto);
         }
@@ -68,50 +62,61 @@ public class CallServiceImpl implements CallService {
         callRepository.deleteById(id);
     }
 
-    @Override
-    public List<CallsStatisticsJson> getCallsStatistics() {
-        List<CallDto> callDtoList = callRepository.findAll();
-
-        List<CallsStatisticsJson> callsStatisticsJsonList = computeCallsStatistics(callDtoList);
-
-        return callsStatisticsJsonList;
+    private void verifyValidityOfCall(CallDto callDto) {
+        validateCallerNumber(callDto);
+        validateCalleeNumber(callDto);
+        validateStartTimestamp(callDto);
+        validateEndTimestamp(callDto);
+        validateStartTimestampBeforeEndTimestamp(callDto);
+        validateCallType(callDto);
     }
 
-    private void verifyValidityOfCall(CallDto callDto) {
+    private void validateCallerNumber(CallDto callDto) {
         if (callDto.getCallerNumber() == null || callDto.getCallerNumber() < 1) {
-            throw new BusinessException("Caller number must not be null and must be a positive number",
+            throw new BusinessException("Caller number must not be empty and must be a positive number!",
                                         callDto.getCallerNumber() != null ? callDto.getCallerNumber().toString() :
                                         null);
         }
+    }
 
+    private void validateCalleeNumber(CallDto callDto) {
         if (callDto.getCalleeNumber() == null || callDto.getCalleeNumber() < 1) {
-            throw new BusinessException("Callee number must not be null and must be a positive number",
+            throw new BusinessException("Callee number must not be empty and must be a positive number!",
                                         callDto.getCalleeNumber() != null ? callDto.getCalleeNumber().toString() :
                                         null);
         }
+    }
 
+    private void validateStartTimestamp(CallDto callDto) {
         if (callDto.getCallStartTimestamp() == null || callDto.getCallStartTimestamp() < 1) {
-            throw new BusinessException("Start timestamp must not be null and must be bigger than 0!",
+            throw new BusinessException("Start timestamp must not be empty and must be bigger than 0!",
                                         callDto.getCallStartTimestamp() != null ?
                                         callDto.getCallStartTimestamp().toString() : null);
         }
+    }
 
+    private void validateEndTimestamp(CallDto callDto) {
         if (callDto.getCallEndTimestamp() == null || callDto.getCallEndTimestamp() < 1) {
-            throw new BusinessException("End timestamp must not be null and must be bigger than 0!",
+            throw new BusinessException("End timestamp must not be empty and must be bigger than 0!",
                                         callDto.getCallEndTimestamp() != null ?
                                         callDto.getCallEndTimestamp().toString() : null);
         }
+    }
 
+    private void validateStartTimestampBeforeEndTimestamp(CallDto callDto) {
         if (callDto.getCallStartTimestamp() > callDto.getCallEndTimestamp()) {
-            throw new BusinessException("Start timestamp must be bigger than end timestamp!",
+            throw new BusinessException("Start timestamp must be before than end timestamp!",
                                         callDto.getCallStartTimestamp().toString(),
                                         callDto.getCallEndTimestamp().toString());
         }
+    }
 
+    private void validateCallType(CallDto callDto) {
         if (!callDto.getCallType().equals("Inbound") && !callDto.getCallType().equals("Outbound")) {
             throw new BusinessException("Call type must be Inbound or Outbound!", callDto.getCallType());
         }
     }
+
 
     private void setCallParameters(CallDto callDto) {
         convertCallStartTimestampToStartDay(callDto);
@@ -198,121 +203,16 @@ public class CallServiceImpl implements CallService {
 
         if (callDto.getCallType().equals(CALL_TYPE_OUTBOUND)) {
             if (callDurationMinutes > NUMBER_OF_MINUTES_BEFORE_PRICE_REDUCTION) {
-                totalCallCost = NUMBER_OF_MINUTES_BEFORE_PRICE_REDUCTION * COST_OF_CALL_FIRST_5_MINUTES
+                totalCallCost = NUMBER_OF_MINUTES_BEFORE_PRICE_REDUCTION * COST_OF_CALL_BEFORE_PRICE_REDUCTION
                                 + (callDurationMinutes - NUMBER_OF_MINUTES_BEFORE_PRICE_REDUCTION)
-                                  * COST_OF_CALL_AFTER_5_MINUTES;
+                                  * COST_OF_CALL_AFTER_PRICE_REDUCTION;
             } else {
-                totalCallCost = callDurationMinutes * COST_OF_CALL_FIRST_5_MINUTES;
-
+                totalCallCost = callDurationMinutes * COST_OF_CALL_BEFORE_PRICE_REDUCTION;
             }
 
             totalCallCost = new BigDecimal(totalCallCost).setScale(2, RoundingMode.HALF_UP).doubleValue();
         }
 
         callDto.setCallCost(totalCallCost);
-    }
-
-    private List<CallsStatisticsJson> computeCallsStatistics(List<CallDto> callDtoList) {
-        Map<LocalDate, List<CallDto>> callDtoListAggregatedByDayMap = callDtoListAggregatedByDay(callDtoList);
-
-        List<CallsStatisticsJson> callsStatisticsJsonList = new ArrayList<>();
-
-        for (Map.Entry<LocalDate, List<CallDto>> callDtoListAggregatedByDayEntry : callDtoListAggregatedByDayMap
-                .entrySet()) {
-            List<CallDto> callDtoListEntryValues = callDtoListAggregatedByDayEntry.getValue();
-
-            Long totalCallsDurationInboundSum = totalCallsDurationInboundSum(callDtoListEntryValues);
-            Long totalCallsDurationOutboundSum = totalCallsDurationOutboundSum(callDtoListEntryValues);
-
-            List<TotalNumberOfCallsByCallerNumber> totalNumberOfCallsByCallerNumberList =
-                    callDtoListAggregatedByCallerNumber(callDtoListEntryValues);
-            List<TotalNumberOfCallsByCalleeNumber> totalNumberOfCallsByCalleeNumberList =
-                    callDtoListAggregatedByCalleeNumber(callDtoListEntryValues);
-
-            Double totalCallsCostSum = totalCallsCostSum(callDtoListEntryValues);
-
-            CallsStatisticsJson callsStatisticsJson = CallsStatisticsJson.Builder
-                    .callStatisticsJsonWith()
-                    .withDay(callDtoListAggregatedByDayEntry.getKey())
-                    .withTotalCallsDurationInbound(totalCallsDurationInboundSum)
-                    .withTotalCallsDurationOutbound(totalCallsDurationOutboundSum)
-                    .withTotalNumberOfCalls((long) callDtoListEntryValues.size())
-                    .withTotalNumberOfCallsByCallerNumber(totalNumberOfCallsByCallerNumberList)
-                    .withTotalNumberOfCallsByCalleeNumber(totalNumberOfCallsByCalleeNumberList)
-                    .withTotalCallsCost(totalCallsCostSum)
-                    .build();
-
-            callsStatisticsJsonList.add(callsStatisticsJson);
-        }
-
-        return callsStatisticsJsonList.stream().sorted(Comparator.comparing(CallsStatisticsJson::getDay)).collect(
-                Collectors.toList());
-    }
-
-    private Map<LocalDate, List<CallDto>> callDtoListAggregatedByDay(List<CallDto> callDtoList) {
-        return callDtoList.stream().collect(Collectors.groupingBy(CallDto::getCallStartDay));
-    }
-
-    private Long totalCallsDurationInboundSum(List<CallDto> callDtoListEntryValues) {
-        return callDtoListEntryValues.stream().filter(callDto -> callDto.getCallType().equals(CALL_TYPE_INBOUND))
-                                     .mapToLong(callDto -> callDto.getCallDuration().toSeconds()).sum();
-    }
-
-    private Long totalCallsDurationOutboundSum(List<CallDto> callDtoListEntryValues) {
-        return callDtoListEntryValues.stream().filter(callDto -> callDto.getCallType().equals(CALL_TYPE_OUTBOUND))
-                                     .mapToLong(callDto -> callDto.getCallDuration().toSeconds()).sum();
-    }
-
-    private List<TotalNumberOfCallsByCallerNumber> callDtoListAggregatedByCallerNumber(
-            List<CallDto> callDtoListEntryValues) {
-        Map<Long, List<CallDto>> callDtoListAggregatedByCallerNumberMap = callDtoListEntryValues.stream().collect(
-                Collectors.groupingBy(CallDto::getCallerNumber));
-
-        List<TotalNumberOfCallsByCallerNumber> totalNumberOfCallsByCallerNumberList = new ArrayList<>();
-
-        for (Map.Entry<Long, List<CallDto>> callDtoListAggregatedByCallerNumberEntry :
-                callDtoListAggregatedByCallerNumberMap.entrySet()) {
-            TotalNumberOfCallsByCallerNumber totalNumberOfCallsByCallerNumber =
-                    TotalNumberOfCallsByCallerNumber.Builder
-                            .totalNumberOfCallsByCallerNumberWith()
-                            .withCallerNumber(callDtoListAggregatedByCallerNumberEntry.getKey())
-                            .withTotalNumberOfCalls((long) callDtoListAggregatedByCallerNumberEntry.getValue().size())
-                            .build();
-
-            totalNumberOfCallsByCallerNumberList.add(totalNumberOfCallsByCallerNumber);
-        }
-
-        return totalNumberOfCallsByCallerNumberList;
-    }
-
-    private List<TotalNumberOfCallsByCalleeNumber> callDtoListAggregatedByCalleeNumber(
-            List<CallDto> callDtoListEntryValues) {
-        Map<Long, List<CallDto>> callDtoListAggregatedByCalleeNumberMap = callDtoListEntryValues.stream().collect(
-                Collectors.groupingBy(CallDto::getCalleeNumber));
-
-        List<TotalNumberOfCallsByCalleeNumber> totalNumberOfCallsByCalleeNumberList = new ArrayList<>();
-
-        for (Map.Entry<Long, List<CallDto>> callDtoListAggregatedByCalleeNumberEntry :
-                callDtoListAggregatedByCalleeNumberMap
-                        .entrySet()) {
-            TotalNumberOfCallsByCalleeNumber totalNumberOfCallsByCalleeNumber =
-                    TotalNumberOfCallsByCalleeNumber.Builder.totalNumberOfCallsByCalleeNumberWith()
-                                                            .withCalleeNumber(
-                                                                    callDtoListAggregatedByCalleeNumberEntry.getKey())
-                                                            .withTotalNumberOfCalls(
-                                                                    (long) callDtoListAggregatedByCalleeNumberEntry
-                                                                            .getValue()
-                                                                            .size())
-                                                            .build();
-
-            totalNumberOfCallsByCalleeNumberList.add(totalNumberOfCallsByCalleeNumber);
-
-        }
-
-        return totalNumberOfCallsByCalleeNumberList;
-    }
-
-    private Double totalCallsCostSum(List<CallDto> callDtoListEntryValue) {
-        return callDtoListEntryValue.stream().mapToDouble(CallDto::getCallCost).sum();
     }
 }

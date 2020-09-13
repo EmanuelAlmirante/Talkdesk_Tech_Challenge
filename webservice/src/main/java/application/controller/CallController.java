@@ -5,6 +5,7 @@ import application.model.calljson.CallJson;
 import application.model.callstatisticsjson.CallsStatisticsJson;
 import application.model.mapper.CallMapper;
 import application.service.call.CallService;
+import application.service.statistics.StatisticsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,8 @@ public class CallController {
     @Autowired
     private CallService callService;
     @Autowired
+    private StatisticsService statisticsService;
+    @Autowired
     private CallMapper callMapper;
 
     @PostMapping("/create-calls")
@@ -33,7 +36,7 @@ public class CallController {
             callDtoList.add(callDto);
         }
 
-        return callService.createCall(callDtoList).stream().map(callMapper::convertCallDtoToCallJson).collect(
+        return callService.createCalls(callDtoList).stream().map(callMapper::convertCallDtoToCallJson).collect(
                 Collectors.toList());
     }
 
@@ -54,6 +57,6 @@ public class CallController {
     @GetMapping("/statistics-calls")
     @ResponseStatus(HttpStatus.OK)
     public List<CallsStatisticsJson> getCallsStatistics() {
-        return callService.getCallsStatistics();
+        return statisticsService.getCallsStatistics();
     }
 }
