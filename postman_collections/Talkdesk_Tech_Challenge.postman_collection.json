@@ -82,12 +82,12 @@
 			"response": []
 		},
 		{
-			"name": "http://localhost:8080/talkdesk/api/call/calls?page=1&type=Inbound",
+			"name": "http://localhost:8080/talkdesk/api/call/get-calls?page=1&type=Inbound",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/talkdesk/api/call/calls?page=1&type=Inbound",
+					"raw": "http://localhost:8080/talkdesk/api/call/get-calls?page=1&type=Inbound",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -97,7 +97,7 @@
 						"talkdesk",
 						"api",
 						"call",
-						"calls"
+						"get-calls"
 					],
 					"query": [
 						{
