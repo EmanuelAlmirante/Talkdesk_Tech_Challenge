@@ -1,0 +1,123 @@
+{
+	"info": {
+		"_postman_id": "b5b1665d-9646-4831-8821-a35b3cac50e2",
+		"name": "Talkdesk_Tech_Challenge",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "http://localhost:8080/talkdesk/api/call/create",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"callerNumber\": 123456789,\n        \"calleeNumber\": 987654321,\n        \"callStartTimestamp\": 1599909010,\n        \"callEndTimestamp\": 1599942944,\n        \"callType\": \"Inbound\"\n    },\n    {\n        \"callerNumber\": 987654321,\n        \"calleeNumber\": 123456789,\n        \"callStartTimestamp\": 1599909010,\n        \"callEndTimestamp\": 1599942944,\n        \"callType\": \"Outbound\"\n    },\n     {\n        \"callerNumber\": 987654321,\n        \"calleeNumber\": 123456789,\n        \"callStartTimestamp\": 1599961728,\n        \"callEndTimestamp\": 1599965728,\n        \"callType\": \"Outbound\"\n    }\n]\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/talkdesk/api/call/create-calls",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"talkdesk",
+						"api",
+						"call",
+						"create-calls"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8080/talkdesk/api/call/delete-call/1",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/talkdesk/api/call/delete-call/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"talkdesk",
+						"api",
+						"call",
+						"delete-call",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8080/talkdesk/api/call/statistics-calls",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/talkdesk/api/call/statistics-calls",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"talkdesk",
+						"api",
+						"call",
+						"statistics-calls"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8080/talkdesk/api/call/calls?page=1&type=Inbound",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/talkdesk/api/call/calls?page=1&type=Inbound",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"talkdesk",
+						"api",
+						"call",
+						"calls"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "type",
+							"value": "Inbound"
+						},
+						{
+							"key": "ty",
+							"value": null,
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
