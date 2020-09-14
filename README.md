@@ -69,7 +69,6 @@ I decided to use an H2 in-memory database as a way to facilitate the development
 - Launch Docker
 - Run the command _sudo systemctl status docker_ to confirm Docker is running
 - Open terminal in the project folder
-- Run the command _mvn clean install_
 - Run the command _sudo docker build -t [NAME_OF_IMAGE] ._ to create the Docker image. Replace _NAME_OF_IMAGE_ with a name for that image like, for example, _uphill-solution_
 - Run the command _sudo docker run -p 8080:8080 [NAME_OF_IMAGE]_ to launch the application
 - Test using Postman and the file in the folder _postman_collections_
