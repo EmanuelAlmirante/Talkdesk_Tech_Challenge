@@ -107,11 +107,6 @@
 						{
 							"key": "type",
 							"value": "Inbound"
-						},
-						{
-							"key": "ty",
-							"value": null,
-							"disabled": true
 						}
 					]
 				}
