@@ -149,3 +149,128 @@ The API endpoints are also documented below, as well as some examples requests m
             "callType": "Outbound"
         }
       ]
+
+
+* Delete call by id:
+
+     **Delete Call**
+
+      DELETE talkdesk/api/call/delete-call/{callId}
+      
+     URL: 
+     
+      http://localhost:8080/talkdesk/api/call/delete-call/1
+      
+     Response Status:
+     
+      204 NO CONTENT
+      
+     Body:
+     
+      Empty
+
+     Return:
+     
+      Empty
+
+
+* Get calls:
+
+     **Get all Calls using pagination and be able to filter by Type**
+
+      GET talkdesk/api/call/get-calls?page={pageNumber}&type={callType}
+      
+     URL: 
+     
+      http://localhost:8080/talkdesk/api/call/get-calls?page=1&type=Inbound
+      
+     Response Status:
+     
+      200 OK
+      
+     Body:
+     
+      Empty
+
+     Return:
+     
+      [
+        {
+            "id": 1,
+            "callerNumber": 123456789,
+            "calleeNumber": 987654321,
+            "callStartTimestamp": 1599909010,
+            "callEndTimestamp": 1599942944,
+            "callType": "Inbound"
+        }
+      ]
+      
+
+* Get calls statistics:
+
+     **Get statistics (the response to this operation should have the values aggregate by day, returning all days with calls)**
+
+      GET talkdesk/api/call/statistics-calls
+      
+     URL: 
+     
+      http://localhost:8080/talkdesk/api/call/statistics-calls
+      
+     Response Status:
+     
+      200 OK
+      
+     Body:
+     
+      Empty
+
+     Return:
+     
+      [
+        {
+            "day": "2020-09-12",
+            "totalCallsDurationInbound": 33934,
+            "totalCallsDurationOutbound": 33934,
+            "totalNumberOfCalls": 2,
+            "totalCallsCost": 28.55,
+            "totalNumberOfCallsByCalleeNumber": [
+                {
+                    "calleeNumber": 123456789,
+                    "totalNumberOfCalls": 1
+                },
+                {
+                    "calleeNumber": 987654321,
+                    "totalNumberOfCalls": 1
+                }
+            ],
+            "totalNumberOfCallsByCallerNumber": [
+                {
+                    "callerNumber": 123456789,
+                    "totalNumberOfCalls": 1
+                },
+                {
+                    "callerNumber": 987654321,
+                    "totalNumberOfCalls": 1
+                }
+            ]
+        },
+        {
+            "day": "2020-09-13",
+            "totalCallsDurationInbound": 0,
+            "totalCallsDurationOutbound": 4000,
+            "totalNumberOfCalls": 1,
+            "totalCallsCost": 3.6,
+            "totalNumberOfCallsByCalleeNumber": [
+                {
+                    "calleeNumber": 123456789,
+                    "totalNumberOfCalls": 1
+                }
+            ],
+            "totalNumberOfCallsByCallerNumber": [
+                {
+                    "callerNumber": 987654321,
+                    "totalNumberOfCalls": 1
+                }
+            ]
+        }
+      ]
