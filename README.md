@@ -45,6 +45,7 @@ I decided to use an H2 in-memory database as a way to facilitate the development
 - Spring Boot
 - Hibernate
 - Swagger
+- H2 Database (in-memory)
 - JUnit
 - Mockito
 - Postman
